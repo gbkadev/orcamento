@@ -1,0 +1,181 @@
+import os
+import unicodedata
+from collections import Counter
+
+
+def remover_acentos(texto):
+    return ''.join(
+        c for c in unicodedata.normalize('NFD', texto)
+        if unicodedata.category(c) != 'Mn'
+    )
+
+
+exames = {
+    "ULTRASSOM": 166.00,
+    "ELETROCARDIOGRAMA": 140.00,
+    "ECOCARDIOGRAMA": 230.00,
+    "CULTURA E ANTIBIOGRAMA": 132.00,
+    "CULTURA FÚNGICA": 109.00,
+    "CITOLOGIA DE NÓDULO": 100.00,
+    "CITOLOGIA DE PELE/OUVIDO": 46.00,
+    "FIV/FELV (TESTE RÁPIDO)": 150.00,
+    "GIARDIA (TESTE RÁPIDO)": 110.00,
+    "TITULAÇÃO DE ERLICHIA": 180.00,
+    "PCR": 192.00,
+    "HEMOGRAMA COMPLETO": 52.00,
+    "UREIA": 19.00,
+    "CREATININA": 21.00,
+    "FOSFATASE ALCALINA (FA)": 19.00,
+    "ALANINA AMINOTRANSFERASE (ALT)": 21.00,
+    "ASPARTATO AMINOTRANSFERASE (AST)": 21.00,
+    "GLICEMIA": 19.00,
+    "COLESTEROL": 24.00,
+    "GAMA GLUTAMIL TRANSFERASE (GGT)": 19.00,
+    "FRUTOSAMINA": 25.00,
+    "PROTEÍNA TOTAL": 19.00,
+    "CÁLCIO TOTAL": 20.00,
+    "VITAMINA B12": 66.00,
+    "ALBUMINA": 21.00,
+    "SDMA": 181.00,
+    "AMILASE": 45.00,
+    "TRIGLICÉRIDES": 22.00,
+    "RETICULÓCITOS": 19.00,
+    "COLESTEROL T+F": 38.00,
+    "SÓDIO": 19.00,
+    "LIPASE": 45.00,
+    "VITAMINA D": 417.00,
+    "BILIRRUBINA": 23.00,
+    "TSH": 100.00,
+    "T4 TOTAL": 130.00,
+    "T4 + PÓS PILL": 118.00,
+    "T3": 130.00,
+    "T4 LIVRE": 131.00,
+    "URINA I": 44.00,
+    "CISTOCENTESE": 50.00,
+    "RELAÇÃO PU/PD": 40.00,
+    "FÓSFORO": 20.00,
+    "POTÁSSIO": 20.00,
+    "CÁLCIO IÔNICO": 20.00,
+    "CLORETO": 21.00,
+    "COPROPARASITOLÓGICO DE FEZES": 45.00,
+    "PERFIL I": 120.00,
+    "PERFIL PRÉ CIRÚRGICO": 131.00,
+    "PERFIL ELETROLÍTICO": 62.00,
+    "PERFIL HEPÁTICO C": 80.00,
+    "PERFIL ELETROLÍTICO COMPLETO": 80.00,
+    "PERFIL CHECK-UP CAN": 154.00,
+    "PERFIL CHECK-UP FEL": 169.00,
+    "RAIO-X": 80.00
+}
+
+total = 0
+selecionados = []
+
+while True:
+
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+    print("=== VILLE ===")
+    print("DIGITE O EXAME")
+    print("DIGITE 'REMOVER' PARA EXCLUIR EXAME")
+    print("DIGITE 'NOVO' PARA LIMPAR O ORÇAMENTO\n")
+
+    if selecionados:
+
+        contador = Counter(nome for nome, _ in selecionados)
+
+        print("ORÇAMENTO:")
+
+        for nome, qtd in contador.items():
+
+            preco = exames[nome]
+            subtotal = preco * qtd
+
+            if qtd > 1:
+                print(f"{nome} ({qtd}x): R$ {subtotal:.2f}")
+            else:
+                print(f"{nome}: R$ {subtotal:.2f}")
+
+    print(f"\nTOTAL: R$ {total:.2f}\n")
+
+    busca = input(">> ").strip().upper()
+
+    # NOVO ORÇAMENTO
+    if busca == "NOVO":
+
+        selecionados.clear()
+        total = 0
+
+        input("\nNovo orçamento iniciado! Pressione ENTER...")
+        continue
+
+    # REMOVER EXAME
+    elif busca == "REMOVER":
+
+        if not selecionados:
+            input("\nNenhum exame no orçamento. ENTER...")
+            continue
+
+        remover = input(
+            "\nDigite o exame para remover: "
+        ).strip().upper()
+
+        remover_sem_acento = remover_acentos(remover)
+
+        encontrados = [
+            (nome, preco)
+            for nome, preco in selecionados
+            if remover_sem_acento in remover_acentos(nome.upper())
+        ]
+
+        if encontrados:
+
+            nome, preco = encontrados[0]
+
+            selecionados.remove((nome, preco))
+            total -= preco
+
+            input(f"\n1x {nome} removido! ENTER...")
+
+        else:
+            input("\nExame não encontrado. ENTER...")
+
+        continue
+
+    # BUSCA DE EXAMES
+    busca_sem_acento = remover_acentos(busca)
+
+    encontrados = [
+        nome
+        for nome in exames
+        if busca_sem_acento in remover_acentos(nome.upper())
+    ]
+
+    if len(encontrados) == 1:
+
+        nome = encontrados[0]
+        preco = exames[nome]
+
+        total += preco
+        selecionados.append((nome, preco))
+
+    elif len(encontrados) > 1:
+
+        print("\nMais de um exame encontrado:\n")
+
+        for i, nome in enumerate(encontrados, 1):
+            print(f"{i} - {nome}")
+
+        escolha = input("\nEscolha o número: ")
+
+        if escolha.isdigit() and 1 <= int(escolha) <= len(encontrados):
+
+            nome = encontrados[int(escolha) - 1]
+            preco = exames[nome]
+
+            total += preco
+            selecionados.append((nome, preco))
+
+    else:
+
+        input("\nNenhum exame encontrado. ENTER...")
